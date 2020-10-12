@@ -1,0 +1,72 @@
+{
+  "name": "vscode-ansi",
+  "publisher": "iliazeus",
+  "displayName": "ANSI Colors",
+  "description": "ANSI color styling for text documents",
+  "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/iliazeus/vscode-ansi"
+  },
+  "bugs": {
+    "url": "https://github.com/iliazeus/vscode-ansi/issues",
+    "email": "ilia.pozdnyakov@ya.ru"
+  },
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.45.0"
+  },
+  "categories": [
+    "Themes",
+    "Visualization"
+  ],
+  "keywords": [
+    "ansi",
+    "escapes",
+    "colors",
+    "logs"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "ansi",
+        "aliases": [
+          "ANSI text"
+        ],
+        "extensions": [
+          ".ansi"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.11.0",
+    "@types/vscode": "^1.45.0",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "glob": "^7.1.6",
+    "mocha": "^7.1.1",
+    "prettier": "^2.1.2",
+    "typescript": "^3.8.3",
+    "vsce": "^1.81.1",
+    "vscode-test": "^1.3.0"
+  },
+  "dependencies": {
+    "ansicolor": "^1.1.93"
+  }
+}
