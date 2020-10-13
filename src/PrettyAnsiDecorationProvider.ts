@@ -69,7 +69,7 @@ export class PrettyAnsiDecorationProvider implements TextEditorDecorationProvide
     return decorationType;
   }
 
-  private _isDisposed: boolean = false;
+  private _isDisposed = false;
 
   dispose(): void {
     if (this._isDisposed) {

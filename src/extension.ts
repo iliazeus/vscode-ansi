@@ -11,7 +11,7 @@ import {
 
 export const extensionId = "iliazeus.vscode-ansi" as const;
 
-export async function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext): Promise<void> {
   const prettyAnsiContentProvider = new PrettyAnsiContentProvider();
   context.subscriptions.push(prettyAnsiContentProvider);
 
@@ -54,4 +54,6 @@ export async function activate(context: ExtensionContext) {
   );
 }
 
-export function deactivate() {}
+export function deactivate(): void {
+  // sic
+}

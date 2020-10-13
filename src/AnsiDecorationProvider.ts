@@ -63,7 +63,7 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     return decorationType;
   }
 
-  private _isDisposed: boolean = false;
+  private _isDisposed = false;
 
   dispose(): void {
     if (this._isDisposed) {

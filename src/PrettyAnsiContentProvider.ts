@@ -58,7 +58,7 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
   }
 
   private readonly _disposables: { dispose(): void }[] = [];
-  private _isDisposed: boolean = false;
+  private _isDisposed = false;
 
   public dispose(): void {
     if (this._isDisposed) {
