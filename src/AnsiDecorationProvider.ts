@@ -1,6 +1,15 @@
 import * as ansicolor from "ansicolor";
 
-import { TextDocument, ProviderResult, DecorationOptions, TextEditorDecorationType, window, Range } from "vscode";
+import {
+  TextDocument,
+  ProviderResult,
+  DecorationOptions,
+  TextEditorDecorationType,
+  window,
+  Range,
+  workspace,
+} from "vscode";
+import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
 
 import { TextEditorDecorationProvider } from "./TextEditorDecorationProvider";
 
@@ -12,10 +21,20 @@ function upsert<K, V>(map: Map<K, V>, key: K, value: V): V {
 
 export class AnsiDecorationProvider implements TextEditorDecorationProvider {
   provideDecorations(document: TextDocument): ProviderResult<[string, DecorationOptions[]][]> {
-    if (document.languageId !== "ansi") {
-      return undefined;
+    if (document.uri.scheme === PrettyAnsiContentProvider.scheme) {
+      return this._provideDecorationsForPrettifiedAnsi(document);
     }
 
+    if (document.languageId === "ansi") {
+      return this._provideDecorationsForAnsiLanguageType(document);
+    }
+
+    return undefined;
+  }
+
+  private _provideDecorationsForAnsiLanguageType(
+    document: TextDocument
+  ): ProviderResult<[string, DecorationOptions[]][]> {
     const documentText = document.getText();
 
     let offset = 0;
@@ -33,6 +52,33 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
       upsert(result, "escape", []).push({ range: escapeRange });
 
       const textRange = new Range(document.positionAt(startOffset), document.positionAt(endOffset));
+      upsert(result, key, []).push({ range: textRange });
+
+      offset = endOffset;
+    }
+
+    return [...result];
+  }
+
+  private async _provideDecorationsForPrettifiedAnsi(
+    providerDocument: TextDocument
+  ): Promise<[string, DecorationOptions[]][]> {
+    const actualUri = PrettyAnsiContentProvider.toActualUri(providerDocument.uri);
+    const actualDocument = await workspace.openTextDocument(actualUri);
+
+    const actualDocumentText = actualDocument.getText();
+
+    let offset = 0;
+    const result = new Map<string, DecorationOptions[]>();
+
+    for (const span of ansicolor.parse(actualDocumentText).spans) {
+      const { text, ...options } = span;
+
+      const key = JSON.stringify(options);
+
+      const endOffset = offset + text.length;
+
+      const textRange = new Range(providerDocument.positionAt(offset), providerDocument.positionAt(endOffset));
       upsert(result, key, []).push({ range: textRange });
 
       offset = endOffset;

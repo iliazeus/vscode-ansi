@@ -3,7 +3,6 @@ import { ExtensionContext, CancellationTokenSource, workspace, commands, window 
 import { AnsiDecorationProvider } from "./AnsiDecorationProvider";
 import { EditorRedrawWatcher } from "./EditorRedrawWatcher";
 import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
-import { PrettyAnsiDecorationProvider } from "./PrettyAnsiDecorationProvider";
 import {
   executeRegisteredTextEditorDecorationProviders,
   registerTextEditorDecorationProvider,
@@ -39,11 +38,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const ansiDecorationProvider = new AnsiDecorationProvider();
   context.subscriptions.push(ansiDecorationProvider);
 
-  const prettyAnsiDecorationProvider = new PrettyAnsiDecorationProvider();
-  context.subscriptions.push(prettyAnsiDecorationProvider);
-
   context.subscriptions.push(registerTextEditorDecorationProvider(ansiDecorationProvider));
-  context.subscriptions.push(registerTextEditorDecorationProvider(prettyAnsiDecorationProvider));
 
   context.subscriptions.push(
     editorRedrawWatcher.onEditorRedraw(async (editor) => {
