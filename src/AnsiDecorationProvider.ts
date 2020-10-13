@@ -8,6 +8,7 @@ import {
   window,
   Range,
   workspace,
+  ThemeColor,
 } from "vscode";
 import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
 
@@ -18,6 +19,31 @@ type AnsiDecorationOptions = Omit<ansicolor.ParsedSpan, "text">;
 function upsert<K, V>(map: Map<K, V>, key: K, value: V): V {
   return map.get(key) ?? (map.set(key, value), value);
 }
+
+const ansiThemeColors: Record<keyof ansicolor.RGBValues, ThemeColor> = {
+  black: new ThemeColor("terminal.ansiBlack"),
+  darkGray: new ThemeColor("terminal.ansiBrightBlack"),
+  lightGray: new ThemeColor("terminal.ansiWhite"),
+  white: new ThemeColor("terminal.ansiBrightWhite"),
+
+  red: new ThemeColor("terminal.ansiRed"),
+  lightRed: new ThemeColor("terminal.ansiBrightRed"),
+
+  green: new ThemeColor("terminal.ansiGreen"),
+  lightGreen: new ThemeColor("terminal.ansiBrightGreen"),
+
+  yellow: new ThemeColor("terminal.ansiYellow"),
+  lightYellow: new ThemeColor("terminal.ansiBrightYellow"),
+
+  blue: new ThemeColor("terminal.ansiBlue"),
+  lightBlue: new ThemeColor("terminal.ansiBrightBlue"),
+
+  magenta: new ThemeColor("terminal.ansiMagenta"),
+  lightMagenta: new ThemeColor("terminal.ansiBrightMagenta"),
+
+  cyan: new ThemeColor("terminal.ansiCyan"),
+  lightCyan: new ThemeColor("terminal.ansiBrightCyan"),
+};
 
 export class AnsiDecorationProvider implements TextEditorDecorationProvider {
   provideDecorations(document: TextDocument): ProviderResult<[string, DecorationOptions[]][]> {
@@ -100,8 +126,13 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
 
     const options: AnsiDecorationOptions = JSON.parse(key);
 
+    const backgroundColorName = options.bgColor?.name as keyof ansicolor.RGBValues | undefined;
+    const colorName = options.color?.name as keyof ansicolor.RGBValues | undefined;
+
     decorationType = window.createTextEditorDecorationType({
       textDecoration: options.css,
+      backgroundColor: backgroundColorName ? ansiThemeColors[backgroundColorName] : undefined,
+      color: colorName ? ansiThemeColors[colorName] : undefined,
     });
 
     this._decorationTypes.set(key, decorationType);
