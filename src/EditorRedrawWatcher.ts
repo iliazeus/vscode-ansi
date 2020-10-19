@@ -8,6 +8,13 @@ export class EditorRedrawWatcher {
 
   public constructor() {
     this._disposables.push(
+      workspace.onDidOpenTextDocument((document) => {
+        for (const editor of window.visibleTextEditors) {
+          if (editor.document === document) {
+            this._onEditorRedraw.fire(editor);
+          }
+        }
+      }),
       window.onDidChangeVisibleTextEditors((editors) => {
         for (const subscription of this._visibleEditorSubscriptions) {
           subscription.dispose();

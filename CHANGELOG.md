@@ -9,3 +9,7 @@
 ## 1.0.2
 
 - Added support for theme colors
+
+## 1.0.3
+
+- Fixed highlighting not showing immediately when changing language mode to `ANSI text`
