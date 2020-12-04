@@ -53,6 +53,20 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "iliazeus.vscode-ansi.showPretty",
+        "key": "shift+ctrl+v",
+        "mac": "shift+cmd+v",
+        "when": "editorLangId == ansi"
+      },
+      {
+        "command": "iliazeus.vscode-ansi.showPrettyToSide",
+        "key": "ctrl+k v",
+        "mac": "cmd+k v",
+        "when": "editorLangId == ansi"
+      }
+    ],
     "languages": [
       {
         "id": "ansi",
