@@ -13,3 +13,8 @@
 ## 1.0.3
 
 - Fixed highlighting not showing immediately when changing language mode to `ANSI text`
+
+## 1.0.4
+
+- Added the `.ans` file extension association
+- Added the preview button to editor titles for ANSI text files
