@@ -1,3 +1,5 @@
+import { posix as posixPath } from "path";
+
 import * as ansicolor from "ansicolor";
 
 import { EventEmitter, TextDocumentContentProvider, Uri, workspace } from "vscode";
@@ -8,8 +10,10 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
   public static readonly scheme = `${extensionId}.pretty`;
 
   public static toProviderUri(actualUri: Uri): Uri {
+    const tabName = "Preview: " + posixPath.basename(actualUri.path);
+
     const scheme = PrettyAnsiContentProvider.scheme;
-    const path = encodeURIComponent(actualUri.toString());
+    const path = encodeURIComponent(tabName);
     const query = encodeURIComponent(actualUri.toString());
 
     return Uri.parse(`${scheme}://show/${path}?${query}`, true);

@@ -34,12 +34,14 @@
     "commands": [
       {
         "command": "iliazeus.vscode-ansi.showPretty",
-        "title": "Show as ANSI",
+        "title": "Open Preview",
+        "category": "ANSI Text",
         "icon": "$(open-preview)"
       },
       {
         "command": "iliazeus.vscode-ansi.showPrettyToSide",
-        "title": "Show as ANSI to the Side",
+        "title": "Open Preview to the Side",
+        "category": "ANSI Text",
         "icon": "$(open-preview)"
       }
     ],
