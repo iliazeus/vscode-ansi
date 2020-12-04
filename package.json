@@ -35,9 +35,24 @@
       {
         "command": "iliazeus.vscode-ansi.showPretty",
         "title": "Show as ANSI",
-        "enablement": "editorActive"
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "iliazeus.vscode-ansi.showPrettyToSide",
+        "title": "Show as ANSI to the Side",
+        "icon": "$(open-preview)"
       }
     ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "iliazeus.vscode-ansi.showPrettyToSide",
+          "alt": "iliazeus.vscode-ansi.showPretty",
+          "when": "editorLangId == ansi",
+          "group": "navigation"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "ansi",

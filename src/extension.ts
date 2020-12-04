@@ -1,4 +1,12 @@
-import { ExtensionContext, CancellationTokenSource, workspace, commands, window } from "vscode";
+import {
+  ExtensionContext,
+  CancellationTokenSource,
+  workspace,
+  commands,
+  window,
+  ViewColumn,
+  TextDocumentShowOptions,
+} from "vscode";
 
 import { AnsiDecorationProvider } from "./AnsiDecorationProvider";
 import { EditorRedrawWatcher } from "./EditorRedrawWatcher";
@@ -18,18 +26,23 @@ export async function activate(context: ExtensionContext): Promise<void> {
     workspace.registerTextDocumentContentProvider(PrettyAnsiContentProvider.scheme, prettyAnsiContentProvider)
   );
 
+  const showPretty = async (options?: TextDocumentShowOptions) => {
+    const actualUri = window.activeTextEditor?.document.uri;
+
+    if (!actualUri) {
+      return;
+    }
+
+    const providerUri = PrettyAnsiContentProvider.toProviderUri(actualUri);
+
+    await window.showTextDocument(providerUri, options);
+  };
+
   context.subscriptions.push(
-    commands.registerCommand(`${extensionId}.showPretty`, async () => {
-      const actualUri = window.activeTextEditor?.document.uri;
-
-      if (!actualUri) {
-        return;
-      }
-
-      const providerUri = PrettyAnsiContentProvider.toProviderUri(actualUri);
-
-      await window.showTextDocument(providerUri);
-    })
+    commands.registerCommand(`${extensionId}.showPretty`, () => showPretty({ viewColumn: ViewColumn.Active }))
+  );
+  context.subscriptions.push(
+    commands.registerCommand(`${extensionId}.showPrettyToSide`, () => showPretty({ viewColumn: ViewColumn.Beside }))
   );
 
   const editorRedrawWatcher = new EditorRedrawWatcher();
