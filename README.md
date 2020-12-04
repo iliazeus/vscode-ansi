@@ -9,13 +9,17 @@ ANSI Color styling for your text editor.
 
 ## Basic usage
 
-Select the `ANSI Text` language mode to highlight text marked up with ANSI escapes.
+Select the `ANSI Text` language mode to highlight text marked up with ANSI escapes. Files with the `.ans` and `.ansi` extensions will be highlighted by default.
 
 ![ANSI Text language mode; Quiet Light theme](images/screenshot-ansi-quietLight.png)
 
-Or run the `Show as ANSI` command for the prettified read-only preview.
+Run the `Show as ANSI` command for the prettified read-only preview.
 
 ![Show as ANSI; Quiet Light theme](images/screenshot-pretty-quietLight.png)
+
+Clicking the preview icon in the editor title will open the preview in a new tab. `Alt`-click to open in the current tab.
+
+![Preview icon](images/screenshot-editor-title-button.png)
 
 The extension fetches the colors from the current theme and aims to look as good as the built-in terminal.
 
