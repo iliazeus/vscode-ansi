@@ -58,7 +58,16 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
 
     const actualDocument = await workspace.openTextDocument(actualUri);
 
-    return ansicolor.strip(actualDocument.getText());
+    // somehow, the behavior of ansicolor.strip() and ansicolor.parse() differ for incorrect escapes.
+    // that is why we cannot just use this:
+
+    // return ansicolor.strip(actualDocument.getText());
+
+    // we'll have to do this the hard way
+    // TODO: consider a different ANSI parser
+
+    const spans = ansicolor.parse(actualDocument.getText()).spans;
+    return spans.map((span) => span.text).join("");
   }
 
   private readonly _disposables: { dispose(): void }[] = [];
