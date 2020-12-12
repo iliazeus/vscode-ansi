@@ -6,6 +6,22 @@ export class EditorRedrawWatcher {
 
   private _visibleEditorSubscriptions: { dispose(): void }[] = [];
 
+  private _updateVisibleEditorSubscriptions(editors: TextEditor[]): void {
+    for (const subscription of this._visibleEditorSubscriptions) {
+      subscription.dispose();
+    }
+
+    this._visibleEditorSubscriptions = editors.map((editor) =>
+      workspace.onDidChangeTextDocument((event) => {
+        if (event.document !== editor.document) {
+          return;
+        }
+
+        this._onEditorRedraw.fire(editor);
+      })
+    );
+  }
+
   public constructor() {
     this._disposables.push(
       workspace.onDidOpenTextDocument((document) => {
@@ -15,26 +31,17 @@ export class EditorRedrawWatcher {
           }
         }
       }),
+
       window.onDidChangeVisibleTextEditors((editors) => {
-        for (const subscription of this._visibleEditorSubscriptions) {
-          subscription.dispose();
-        }
-
-        this._visibleEditorSubscriptions = editors.map((editor) =>
-          workspace.onDidChangeTextDocument((event) => {
-            if (event.document !== editor.document) {
-              return;
-            }
-
-            this._onEditorRedraw.fire(editor);
-          })
-        );
+        this._updateVisibleEditorSubscriptions(editors);
 
         for (const editor of editors) {
           this._onEditorRedraw.fire(editor);
         }
       })
     );
+
+    this._updateVisibleEditorSubscriptions(window.visibleTextEditors);
 
     setImmediate(() => {
       for (const editor of window.visibleTextEditors) {
