@@ -138,9 +138,15 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     const colorName = options.color?.name as keyof ansicolor.RGBValues | undefined;
 
     decorationType = window.createTextEditorDecorationType({
-      textDecoration: options.css,
       backgroundColor: backgroundColorName ? ansiThemeColors[backgroundColorName] : undefined,
       color: colorName ? ansiThemeColors[colorName] : undefined,
+
+      fontWeight: options.bold ? "bold" : undefined,
+      fontStyle: options.italic ? "italic" : undefined,
+
+      // an obvious hack
+      // TODO: consider a different parser
+      textDecoration: options.css.includes("underline") ? "underline" : undefined,
     });
 
     this._decorationTypes.set(key, decorationType);
