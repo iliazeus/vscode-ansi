@@ -18,3 +18,8 @@
 
 - Added the `.ans` file extension association
 - Added the preview button to editor titles for ANSI text files
+
+## 1.0.5
+
+- Added support for bold, italic, underline and dim modifiers
+- Fixed several bugs with updating and rendering text decorations
