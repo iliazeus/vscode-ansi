@@ -64,7 +64,11 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     const documentText = document.getText();
 
     let offset = 0;
+
     const result = new Map<string, DecorationOptions[]>();
+    for (const key of this._decorationTypes.keys()) {
+      result.set(key, []);
+    }
 
     for (const span of ansicolor.parse(documentText).spans) {
       const { text, ...options } = span;
@@ -95,7 +99,11 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     const actualDocumentText = actualDocument.getText();
 
     let offset = 0;
+
     const result = new Map<string, DecorationOptions[]>();
+    for (const key of this._decorationTypes.keys()) {
+      result.set(key, []);
+    }
 
     for (const span of ansicolor.parse(actualDocumentText).spans) {
       const { text, ...options } = span;
