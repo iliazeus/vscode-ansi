@@ -1,0 +1,10 @@
+[30mblack[0m    [90mbright black[0m     [40mblack[0m    [100mbright black[0m
+[31mred[0m      [91mbright red[0m       [41mred[0m      [101mbright red[0m
+[32mgreen[0m    [92mbright green[0m     [42mgreen[0m    [102mbright green[0m
+[33myellow[0m   [93mbright yellow[0m    [43myellow[0m   [103mbright yellow[0m
+[34mblue[0m     [94mbright blue[0m      [44mblue[0m     [104mbright blue[0m
+[35mmagenta[0m  [95mbright magenta[0m   [45mmagenta[0m  [105mbright magenta[0m
+[36mcyan[0m     [96mbright cyan[0m      [46mcyan[0m     [106mbright cyan[0m
+[37mwhite[0m    [97mbright white[0m     [47mwhite[0m    [107mbright white[0m
+
+[1mbold[0m [2mdim[0m [3mitalic[3m [4munderline[4m
