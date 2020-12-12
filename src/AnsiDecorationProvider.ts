@@ -9,6 +9,7 @@ import {
   Range,
   workspace,
   ThemeColor,
+  Position,
 } from "vscode";
 import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
 
@@ -86,6 +87,9 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
 
       offset = endOffset;
     }
+
+    const lastRange = new Range(document.positionAt(offset), new Position(document.lineCount, 0));
+    upsert(result, "escape", []).push({ range: lastRange });
 
     return [...result];
   }
