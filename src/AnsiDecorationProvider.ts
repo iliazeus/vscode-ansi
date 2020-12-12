@@ -147,6 +147,8 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
       // an obvious hack
       // TODO: consider a different parser
       textDecoration: options.css.includes("underline") ? "underline" : undefined,
+
+      opacity: options.color?.dim ? "50%" : undefined,
     });
 
     this._decorationTypes.set(key, decorationType);
