@@ -1,4 +1,4 @@
-import { EventEmitter, TextEditor, window, workspace } from "vscode";
+import { EventEmitter, TextEditor, Uri, window, workspace } from "vscode";
 
 export class EditorRedrawWatcher {
   private readonly _onEditorRedraw = new EventEmitter<TextEditor>();
@@ -48,6 +48,14 @@ export class EditorRedrawWatcher {
         this._onEditorRedraw.fire(editor);
       }
     });
+  }
+
+  public forceEmitForUri(uri: Uri): void {
+    for (const editor of window.visibleTextEditors) {
+      if (editor.document.uri.toString() === uri.toString()) {
+        this._onEditorRedraw.fire(editor);
+      }
+    }
   }
 
   private readonly _disposables: { dispose(): void }[] = [];

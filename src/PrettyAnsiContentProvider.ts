@@ -5,6 +5,7 @@ import * as ansicolor from "ansicolor";
 import { EventEmitter, TextDocumentContentProvider, Uri, workspace } from "vscode";
 
 import { extensionId } from "./extension";
+import { EditorRedrawWatcher } from "./EditorRedrawWatcher";
 
 export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
   public static readonly scheme = `${extensionId}.pretty`;
@@ -32,7 +33,11 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
 
   private readonly _watchedUris = new Set<string>();
 
-  public constructor() {
+  private readonly _editorRedrawWatcher: EditorRedrawWatcher;
+
+  public constructor(editorRedrawWatcher: EditorRedrawWatcher) {
+    this._editorRedrawWatcher = editorRedrawWatcher;
+
     this._disposables.push(
       workspace.onDidChangeTextDocument((event) => {
         const actualUri = event.document.uri;
@@ -52,6 +57,13 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
   }
 
   public async provideTextDocumentContent(providerUri: Uri): Promise<string> {
+    // VS Code does not emit `workspace.onDidChangeTextDocument` for the provided document
+    // if the content is identical to the current one, despite us emitting `onDidChange`.
+
+    // it means that we have to force-emit `onEditorRedraw` to correctly handle situations
+    // when the escapes change, but the content itself remains the same.
+    setImmediate(() => this._editorRedrawWatcher.forceEmitForUri(providerUri));
+
     const actualUri = PrettyAnsiContentProvider.toActualUri(providerUri);
 
     this._watchedUris.add(actualUri.toString());

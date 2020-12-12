@@ -19,7 +19,10 @@ import {
 export const extensionId = "iliazeus.vscode-ansi" as const;
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  const prettyAnsiContentProvider = new PrettyAnsiContentProvider();
+  const editorRedrawWatcher = new EditorRedrawWatcher();
+  context.subscriptions.push(editorRedrawWatcher);
+
+  const prettyAnsiContentProvider = new PrettyAnsiContentProvider(editorRedrawWatcher);
   context.subscriptions.push(prettyAnsiContentProvider);
 
   context.subscriptions.push(
@@ -44,9 +47,6 @@ export async function activate(context: ExtensionContext): Promise<void> {
   context.subscriptions.push(
     commands.registerCommand(`${extensionId}.showPrettyToSide`, () => showPretty({ viewColumn: ViewColumn.Beside }))
   );
-
-  const editorRedrawWatcher = new EditorRedrawWatcher();
-  context.subscriptions.push(editorRedrawWatcher);
 
   const ansiDecorationProvider = new AnsiDecorationProvider();
   context.subscriptions.push(ansiDecorationProvider);
