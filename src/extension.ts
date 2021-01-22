@@ -60,6 +60,13 @@ export async function activate(context: ExtensionContext): Promise<void> {
       tokenSource.dispose();
     })
   );
+
+  context.subscriptions.push(
+    commands.registerTextEditorCommand(`${extensionId}.insertEscapeCharacter`, (editor, edit) => {
+      edit.delete(editor.selection);
+      edit.insert(editor.selection.end, "\x1b");
+    })
+  );
 }
 
 export function deactivate(): void {
