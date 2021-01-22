@@ -1,5 +1,3 @@
-import * as ansicolor from "ansicolor";
-
 import {
   TextDocument,
   ProviderResult,
@@ -9,42 +7,49 @@ import {
   Range,
   workspace,
   ThemeColor,
-  Position,
 } from "vscode";
+
+import * as ansi from "./ansi";
 import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
-
 import { TextEditorDecorationProvider } from "./TextEditorDecorationProvider";
-
-type AnsiDecorationOptions = Omit<ansicolor.ParsedSpan, "text">;
 
 function upsert<K, V>(map: Map<K, V>, key: K, value: V): V {
   return map.get(key) ?? (map.set(key, value), value);
 }
 
-const ansiThemeColors: Record<keyof ansicolor.RGBValues, ThemeColor> = {
-  black: new ThemeColor("terminal.ansiBlack"),
-  darkGray: new ThemeColor("terminal.ansiBrightBlack"),
-  lightGray: new ThemeColor("terminal.ansiWhite"),
-  white: new ThemeColor("terminal.ansiBrightWhite"),
+const ansiThemeColors: Record<ansi.NamedColor, ThemeColor> = {
+  [ansi.NamedColor.DefaultBackground]: new ThemeColor("editor.background"),
+  [ansi.NamedColor.DefaultForeground]: new ThemeColor("editor.foreground"),
 
-  red: new ThemeColor("terminal.ansiRed"),
-  lightRed: new ThemeColor("terminal.ansiBrightRed"),
+  [ansi.NamedColor.Black]: new ThemeColor("terminal.ansiBlack"),
+  [ansi.NamedColor.BrightBlack]: new ThemeColor("terminal.ansiBrightBlack"),
 
-  green: new ThemeColor("terminal.ansiGreen"),
-  lightGreen: new ThemeColor("terminal.ansiBrightGreen"),
+  [ansi.NamedColor.White]: new ThemeColor("terminal.ansiWhite"),
+  [ansi.NamedColor.BrightWhite]: new ThemeColor("terminal.ansiBrightWhite"),
 
-  yellow: new ThemeColor("terminal.ansiYellow"),
-  lightYellow: new ThemeColor("terminal.ansiBrightYellow"),
+  [ansi.NamedColor.Red]: new ThemeColor("terminal.ansiRed"),
+  [ansi.NamedColor.BrightRed]: new ThemeColor("terminal.ansiBrightRed"),
 
-  blue: new ThemeColor("terminal.ansiBlue"),
-  lightBlue: new ThemeColor("terminal.ansiBrightBlue"),
+  [ansi.NamedColor.Green]: new ThemeColor("terminal.ansiGreen"),
+  [ansi.NamedColor.BrightGreen]: new ThemeColor("terminal.ansiBrightGreen"),
 
-  magenta: new ThemeColor("terminal.ansiMagenta"),
-  lightMagenta: new ThemeColor("terminal.ansiBrightMagenta"),
+  [ansi.NamedColor.Yellow]: new ThemeColor("terminal.ansiYellow"),
+  [ansi.NamedColor.BrightYellow]: new ThemeColor("terminal.ansiBrightYellow"),
 
-  cyan: new ThemeColor("terminal.ansiCyan"),
-  lightCyan: new ThemeColor("terminal.ansiBrightCyan"),
+  [ansi.NamedColor.Blue]: new ThemeColor("terminal.ansiBlue"),
+  [ansi.NamedColor.BrightBlue]: new ThemeColor("terminal.ansiBrightBlue"),
+
+  [ansi.NamedColor.Magenta]: new ThemeColor("terminal.ansiMagenta"),
+  [ansi.NamedColor.BrightMagenta]: new ThemeColor("terminal.ansiBrightMagenta"),
+
+  [ansi.NamedColor.Cyan]: new ThemeColor("terminal.ansiCyan"),
+  [ansi.NamedColor.BrightCyan]: new ThemeColor("terminal.ansiBrightCyan"),
 };
+
+function convertColor(color: ansi.Color): ThemeColor | string {
+  if (color & ansi.ColorFlags.Named) return ansiThemeColors[color];
+  return "#" + color.toString(16).padStart(6, "0");
+}
 
 export class AnsiDecorationProvider implements TextEditorDecorationProvider {
   provideDecorations(document: TextDocument): ProviderResult<[string, DecorationOptions[]][]> {
@@ -64,32 +69,39 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
   ): ProviderResult<[string, DecorationOptions[]][]> {
     const documentText = document.getText();
 
-    let offset = 0;
-
     const result = new Map<string, DecorationOptions[]>();
     for (const key of this._decorationTypes.keys()) {
       result.set(key, []);
     }
 
-    for (const span of ansicolor.parse(documentText).spans) {
-      const { text, ...options } = span;
+    const escapeDecorations: DecorationOptions[] = [];
+    result.set("escape", escapeDecorations);
 
-      const key = JSON.stringify(options);
+    let lastSpanOffset = 0;
+    let lastSpanLength = 0;
 
-      const startOffset = documentText.indexOf(text, offset);
-      const endOffset = startOffset + text.length;
+    for (const span of new ansi.Parser().chunk(documentText, true)) {
+      const { offset, length, ...style } = span;
 
-      const escapeRange = new Range(document.positionAt(offset), document.positionAt(startOffset));
-      upsert(result, "escape", []).push({ range: escapeRange });
+      const escapeRange = new Range(document.positionAt(lastSpanOffset + lastSpanLength), document.positionAt(offset));
 
-      const textRange = new Range(document.positionAt(startOffset), document.positionAt(endOffset));
-      upsert(result, key, []).push({ range: textRange });
+      escapeDecorations.push({ range: escapeRange });
 
-      offset = endOffset;
+      const key = JSON.stringify(style);
+      const range = new Range(document.positionAt(offset), document.positionAt(offset + length));
+
+      upsert(result, key, []).push({ range });
+
+      lastSpanOffset = offset;
+      lastSpanLength = length;
     }
 
-    const lastRange = new Range(document.positionAt(offset), new Position(document.lineCount, 0));
-    upsert(result, "escape", []).push({ range: lastRange });
+    const escapeRange = new Range(
+      document.positionAt(lastSpanOffset + lastSpanLength),
+      document.positionAt(documentText.length)
+    );
+
+    escapeDecorations.push({ range: escapeRange });
 
     return [...result];
   }
@@ -102,24 +114,26 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
 
     const actualDocumentText = actualDocument.getText();
 
-    let offset = 0;
+    let providerOffset = 0;
 
     const result = new Map<string, DecorationOptions[]>();
     for (const key of this._decorationTypes.keys()) {
       result.set(key, []);
     }
 
-    for (const span of ansicolor.parse(actualDocumentText).spans) {
-      const { text, ...options } = span;
+    for (const span of new ansi.Parser().chunk(actualDocumentText, true)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { offset, length, ...style } = span;
 
-      const key = JSON.stringify(options);
+      const key = JSON.stringify(style);
+      const range = new Range(
+        providerDocument.positionAt(providerOffset),
+        providerDocument.positionAt(providerOffset + length)
+      );
 
-      const endOffset = offset + text.length;
+      upsert(result, key, []).push({ range });
 
-      const textRange = new Range(providerDocument.positionAt(offset), providerDocument.positionAt(endOffset));
-      upsert(result, key, []).push({ range: textRange });
-
-      offset = endOffset;
+      providerOffset += length;
     }
 
     return [...result];
@@ -136,23 +150,16 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
       return decorationType;
     }
 
-    const options: AnsiDecorationOptions = JSON.parse(key);
-
-    const backgroundColorName = options.bgColor?.name as keyof ansicolor.RGBValues | undefined;
-    const colorName = options.color?.name as keyof ansicolor.RGBValues | undefined;
+    const style: ansi.Style = JSON.parse(key);
 
     decorationType = window.createTextEditorDecorationType({
-      backgroundColor: backgroundColorName ? ansiThemeColors[backgroundColorName] : undefined,
-      color: colorName ? ansiThemeColors[colorName] : undefined,
+      backgroundColor: convertColor(style.backgroundColor),
+      color: convertColor(style.foregroundColor),
 
-      fontWeight: options.bold ? "bold" : undefined,
-      fontStyle: options.italic ? "italic" : undefined,
-
-      // an obvious hack
-      // TODO: consider a different parser
-      textDecoration: options.css.includes("underline") ? "underline" : undefined,
-
-      opacity: options.color?.dim ? "50%" : undefined,
+      fontWeight: style.attributeFlags & ansi.AttributeFlags.Bold ? "bold" : undefined,
+      fontStyle: style.attributeFlags & ansi.AttributeFlags.Italic ? "italic" : undefined,
+      textDecoration: style.attributeFlags & ansi.AttributeFlags.Underline ? "underline" : undefined,
+      opacity: style.attributeFlags & ansi.AttributeFlags.Faint ? "50%" : undefined,
     });
 
     this._decorationTypes.set(key, decorationType);

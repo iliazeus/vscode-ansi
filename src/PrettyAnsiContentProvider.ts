@@ -1,9 +1,8 @@
 import { posix as posixPath } from "path";
 
-import * as ansicolor from "ansicolor";
-
 import { EventEmitter, TextDocumentContentProvider, Uri, workspace } from "vscode";
 
+import * as ansi from "./ansi";
 import { extensionId } from "./extension";
 import { EditorRedrawWatcher } from "./EditorRedrawWatcher";
 
@@ -69,17 +68,10 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
     this._watchedUris.add(actualUri.toString());
 
     const actualDocument = await workspace.openTextDocument(actualUri);
+    const actualText = actualDocument.getText();
 
-    // somehow, the behavior of ansicolor.strip() and ansicolor.parse() differ for incorrect escapes.
-    // that is why we cannot just use this:
-
-    // return ansicolor.strip(actualDocument.getText());
-
-    // we'll have to do this the hard way
-    // TODO: consider a different ANSI parser
-
-    const spans = ansicolor.parse(actualDocument.getText()).spans;
-    return spans.map((span) => span.text).join("");
+    const spans = new ansi.Parser().chunk(actualDocument.getText(), true);
+    return spans.map((span) => actualText.substr(span.offset, span.length)).join("");
   }
 
   private readonly _disposables: { dispose(): void }[] = [];
