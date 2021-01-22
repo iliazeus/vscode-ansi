@@ -11,11 +11,11 @@ ANSI Color styling for your text editor.
 
 Select the `ANSI Text` language mode to highlight text marked up with ANSI escapes. Files with the `.ans` and `.ansi` extensions will be highlighted by default.
 
-![ANSI Text language mode; Quiet Light theme](images/screenshot-editor-darkPlus.png)
+![ANSI Text language mode; Dark Plus theme](images/screenshot-editor-darkPlus.png)
 
-Run the `ANSI Text: Preview` command for the prettified read-only preview.
+Run the `ANSI Text: Open Preview` command for the prettified read-only preview.
 
-![ANSI Text preview; Quiet Light theme](images/screenshot-preview-darkPlus.png)
+![ANSI Text preview; Dark Plus theme](images/screenshot-preview-darkPlus.png)
 
 Clicking the preview icon in the editor title will open the preview in a new tab. `Alt`-click to open in the current tab.
 
@@ -23,7 +23,21 @@ Clicking the preview icon in the editor title will open the preview in a new tab
 
 The extension fetches the colors from the current theme and aims to look as good as the built-in terminal.
 
-![ANSI Text preview; Solarized Light theme](images/screenshot-themes.gif)
+![ANSI Text preview; various themes](images/screenshot-themes.gif)
+
+## Supported ANSI escape codes
+
+Basic colors and formatting:
+
+![Basic formatting](images/screenshot-basic-darkPlus.png)
+
+8-bit colors:
+
+![8-bit colors](images/screenshot-8bitColor-darkPlus.png)
+
+24-bit colors:
+
+![24-bit colors](images/screenshot-24bitColor-darkPlus.png)
 
 ## Custom file icon
 
