@@ -6,26 +6,26 @@ export enum ColorFlags {
 }
 
 export enum NamedColor {
-  DefaultBackground = ColorFlags.Named | 0,
-  DefaultForeground = ColorFlags.Named | 1,
+  DefaultBackground = ColorFlags.Named | 0xf0,
+  DefaultForeground = ColorFlags.Named | 0xf1,
 
-  Black = ColorFlags.Named | 30,
-  Red = ColorFlags.Named | 31,
-  Green = ColorFlags.Named | 32,
-  Yellow = ColorFlags.Named | 33,
-  Blue = ColorFlags.Named | 34,
-  Magenta = ColorFlags.Named | 35,
-  Cyan = ColorFlags.Named | 36,
-  White = ColorFlags.Named | 37,
+  Black = ColorFlags.Named | 0,
+  Red = ColorFlags.Named | 1,
+  Green = ColorFlags.Named | 2,
+  Yellow = ColorFlags.Named | 3,
+  Blue = ColorFlags.Named | 4,
+  Magenta = ColorFlags.Named | 5,
+  Cyan = ColorFlags.Named | 6,
+  White = ColorFlags.Named | 7,
 
-  BrightBlack = ColorFlags.Named | ColorFlags.Bright | 30,
-  BrightRed = ColorFlags.Named | ColorFlags.Bright | 31,
-  BrightGreen = ColorFlags.Named | ColorFlags.Bright | 32,
-  BrightYellow = ColorFlags.Named | ColorFlags.Bright | 33,
-  BrightBlue = ColorFlags.Named | ColorFlags.Bright | 34,
-  BrightMagenta = ColorFlags.Named | ColorFlags.Bright | 35,
-  BrightCyan = ColorFlags.Named | ColorFlags.Bright | 36,
-  BrightWhite = ColorFlags.Named | ColorFlags.Bright | 37,
+  BrightBlack = ColorFlags.Named | ColorFlags.Bright | NamedColor.Black,
+  BrightRed = ColorFlags.Named | ColorFlags.Bright | NamedColor.Red,
+  BrightGreen = ColorFlags.Named | ColorFlags.Bright | NamedColor.Green,
+  BrightYellow = ColorFlags.Named | ColorFlags.Bright | NamedColor.Yellow,
+  BrightBlue = ColorFlags.Named | ColorFlags.Bright | NamedColor.Blue,
+  BrightMagenta = ColorFlags.Named | ColorFlags.Bright | NamedColor.Magenta,
+  BrightCyan = ColorFlags.Named | ColorFlags.Bright | NamedColor.Cyan,
+  BrightWhite = ColorFlags.Named | ColorFlags.Bright | NamedColor.White,
 }
 
 export type RgbColor = number;
@@ -289,12 +289,34 @@ export class Parser {
         case 35:
         case 36:
         case 37:
-          style.foregroundColor = ColorFlags.Named | code;
+          style.foregroundColor = ColorFlags.Named | (code - 30);
           break;
 
-        case 38:
-          // TODO: 8-bit and 24-bit colors
+        case 38: {
+          const colorType = args[argIndex + 1];
+
+          if (colorType === 5) {
+            const color = args[argIndex + 2];
+            argIndex += 2;
+
+            if (0 <= color && color <= 255) {
+              style.foregroundColor = this.convert8BitColor(color);
+            }
+          }
+
+          if (colorType === 2) {
+            const r = args[argIndex + 2];
+            const g = args[argIndex + 3];
+            const b = args[argIndex + 4];
+            argIndex += 4;
+
+            if (0 <= r && r <= 255 && 0 <= g && g <= 255 && 0 <= b && b <= 255) {
+              style.foregroundColor = (r << 16) | (g << 8) | b;
+            }
+          }
+
           break;
+        }
 
         case 39:
           style.foregroundColor = DefaultStyle.foregroundColor;
@@ -308,12 +330,34 @@ export class Parser {
         case 45:
         case 46:
         case 47:
-          style.backgroundColor = ColorFlags.Named | (code - 10);
+          style.backgroundColor = ColorFlags.Named | (code - 40);
           break;
 
-        case 48:
-          // TODO: 8-bit and 24-bit colors
+        case 48: {
+          const colorType = args[argIndex + 1];
+
+          if (colorType === 5) {
+            const color = args[argIndex + 2];
+            argIndex += 2;
+
+            if (0 <= color && color <= 255) {
+              style.backgroundColor = this.convert8BitColor(color);
+            }
+          }
+
+          if (colorType === 2) {
+            const r = args[argIndex + 2];
+            const g = args[argIndex + 3];
+            const b = args[argIndex + 4];
+            argIndex += 4;
+
+            if (0 <= r && r <= 255 && 0 <= g && g <= 255 && 0 <= b && b <= 255) {
+              style.backgroundColor = (r << 16) | (g << 8) | b;
+            }
+          }
+
           break;
+        }
 
         case 49:
           style.backgroundColor = DefaultStyle.backgroundColor;
@@ -372,7 +416,7 @@ export class Parser {
         case 95:
         case 96:
         case 97:
-          style.foregroundColor = ColorFlags.Named | ColorFlags.Bright | (code - 60);
+          style.foregroundColor = ColorFlags.Named | ColorFlags.Bright | (code - 90);
           break;
 
         case 100:
@@ -383,9 +427,40 @@ export class Parser {
         case 105:
         case 106:
         case 107:
-          style.backgroundColor = ColorFlags.Named | ColorFlags.Bright | (code - 70);
+          style.backgroundColor = ColorFlags.Named | ColorFlags.Bright | (code - 100);
           break;
       }
     }
+  }
+
+  private convert8BitColor(color: number): Color {
+    if (0 <= color && color <= 7) {
+      return ColorFlags.Named | color;
+    }
+
+    if (8 <= color && color <= 15) {
+      return ColorFlags.Named | ColorFlags.Bright | (color - 8);
+    }
+
+    if (232 <= color && color <= 255) {
+      const intensity = ((255 * (color - 232)) / 23) | 0;
+      return (intensity << 16) | (intensity << 8) | intensity;
+    }
+
+    let color6 = color - 16;
+
+    const b6 = color6 % 6;
+    color6 = (color6 / 6) | 0;
+
+    const g6 = color6 % 6;
+    color6 = (color6 / 6) | 0;
+
+    const r6 = color6;
+
+    const r = ((255 * r6) / 5) | 0;
+    const g = ((255 * g6) / 5) | 0;
+    const b = ((255 * b6) / 5) | 0;
+
+    return (r << 16) | (g << 8) | b;
   }
 }
