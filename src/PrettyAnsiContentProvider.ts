@@ -1,6 +1,6 @@
 import { posix as posixPath } from "path";
 
-import { EventEmitter, TextDocumentContentProvider, Uri, workspace } from "vscode";
+import { EventEmitter, FileSystemWatcher, TextDocumentContentProvider, Uri, workspace } from "vscode";
 
 import * as ansi from "./ansi";
 import { extensionId } from "./extension";
@@ -31,6 +31,7 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
   public readonly onDidChange = this._onDidChange.event;
 
   private readonly _watchedUris = new Set<string>();
+  private readonly _fileSystemWatcher: FileSystemWatcher;
 
   private readonly _editorRedrawWatcher: EditorRedrawWatcher;
 
@@ -48,9 +49,24 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
       })
     );
 
+    this._fileSystemWatcher = workspace.createFileSystemWatcher("**/*", false, false, true);
+    this._disposables.push(this._fileSystemWatcher);
+
     this._disposables.push(
-      workspace.onDidCloseTextDocument((document) => {
-        this._watchedUris.delete(document.uri.toString());
+      this._fileSystemWatcher.onDidChange((actualUri) => {
+        if (this._watchedUris.has(actualUri.toString())) {
+          const providerUri = PrettyAnsiContentProvider.toProviderUri(actualUri);
+          this._onDidChange.fire(providerUri);
+        }
+      })
+    );
+
+    this._disposables.push(
+      this._fileSystemWatcher.onDidCreate((actualUri) => {
+        if (this._watchedUris.has(actualUri.toString())) {
+          const providerUri = PrettyAnsiContentProvider.toProviderUri(actualUri);
+          this._onDidChange.fire(providerUri);
+        }
       })
     );
   }

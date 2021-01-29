@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Fixed a bug with corrupting previews of files that have been deleted and re-created
+
 ## 1.1.0
 
 - Implemented own ANSI escape parser
