@@ -84,10 +84,19 @@ export class PrettyAnsiContentProvider implements TextDocumentContentProvider {
     this._watchedUris.add(actualUri.toString());
 
     const actualDocument = await workspace.openTextDocument(actualUri);
-    const actualText = actualDocument.getText();
 
-    const spans = new ansi.Parser().chunk(actualDocument.getText(), true);
-    return spans.map((span) => actualText.substr(span.offset, span.length)).join("");
+    const parser = new ansi.Parser();
+
+    const textChunks: string[] = [];
+
+    for (let lineNumber = 0; lineNumber < actualDocument.lineCount; lineNumber += 1) {
+      const line = actualDocument.lineAt(lineNumber);
+      const spans = parser.appendLine(line.text);
+      const textSpans = spans.filter((span) => !(span.attributeFlags & ansi.AttributeFlags.EscapeSequence));
+      textChunks.push(...textSpans.map(({ offset, length }) => line.text.substr(offset, length)), "\n");
+    }
+
+    return textChunks.join("");
   }
 
   private readonly _disposables: { dispose(): void }[] = [];

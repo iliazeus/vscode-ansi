@@ -48,6 +48,8 @@ export enum AttributeFlags {
   Overlined = 1 << 14,
   Superscript = 1 << 15,
   Subscript = 1 << 16,
+
+  EscapeSequence = 1 << 31,
 }
 
 export interface Style {
@@ -64,6 +66,16 @@ export const DefaultStyle: Style = {
   fontIndex: 0,
 };
 
+function stylesAreEqual(a: Style, b: Style): boolean {
+  return (
+    b !== null && // needed to allow null to be used as a filler value
+    a.foregroundColor === b.foregroundColor &&
+    a.backgroundColor === b.backgroundColor &&
+    a.attributeFlags === b.attributeFlags &&
+    a.fontIndex === b.fontIndex
+  );
+}
+
 export interface Span extends Style {
   offset: number;
   length: number;
@@ -76,27 +88,87 @@ export interface ParserOptions {
 export class Parser {
   public constructor(public options: ParserOptions = { doubleUnderline: false }) {}
 
-  private style = { ...DefaultStyle };
-  private inputOffset = 0;
-  private unparsedText = "";
+  public lines: string[] = [];
+  public lineSpans: Span[][] = [];
 
-  public chunk(chunk: string, eof = false): Span[] {
-    const text = this.unparsedText + chunk;
-    let textOffset = 0;
+  private _finalStyle: Style = { ...DefaultStyle };
 
+  public clear(): void {
+    this.lines.splice(0);
+    this.lineSpans.splice(0);
+    this._finalStyle = { ...DefaultStyle };
+  }
+
+  public appendLine(text: string): Span[] {
+    const spans = this._parseLine(text, this._finalStyle);
+
+    this.lineSpans.push(spans);
+    this.lines.push(text);
+
+    return spans;
+  }
+
+  /** @returns number of affected lines */
+  public spliceLines(lineNumber: number, lineCount: number, lines: string[]): number {
+    if (lineNumber < 0 || lineNumber > this.lines.length) {
+      throw new Error("invalid line number");
+    }
+
+    if (lineCount < 0 || lineCount > this.lines.length - lineNumber) {
+      throw new Error("invalid line count");
+    }
+
+    const style = this.lineSpans[lineNumber][0];
+
+    this.lines.splice(lineNumber, lineCount, ...lines);
+
+    // the implementations of _reparseFromLine() and stylesAreEqual()
+    // allow us to just use null instead of trying to come up with
+    // a valid filler value
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this.lineSpans.splice(lineNumber, lineCount, ...lines.map(() => [null!]));
+
+    const reparsedLineCount = this._reparseFromLine(lineNumber, style);
+
+    return reparsedLineCount;
+  }
+
+  /** @returns number of affected lines */
+  private _reparseFromLine(lineNumber: number, style: Style): number {
+    const tailLines = this.lines.splice(lineNumber);
+    const tailLineSpans = this.lineSpans.splice(lineNumber);
+
+    let affectedLineCount = 0;
+
+    for (affectedLineCount = 0; affectedLineCount < tailLines.length; affectedLineCount += 1) {
+      if (stylesAreEqual(style, tailLineSpans[affectedLineCount][0])) {
+        this.lines.push(...tailLines.splice(affectedLineCount));
+        this.lineSpans.push(...tailLineSpans.splice(affectedLineCount));
+        return affectedLineCount;
+      }
+
+      const spans = this._parseLine(tailLines[affectedLineCount], style);
+
+      this.lineSpans.push(spans);
+      this.lines.push(tailLines[affectedLineCount]);
+    }
+
+    this._finalStyle = style;
+    return affectedLineCount;
+  }
+
+  private _parseLine(text: string, style: Style): Span[] {
     const spans: Span[] = [];
 
-    let index = textOffset;
+    let textOffset = 0;
+    let index = 0;
+
     while (index < text.length) {
-      if (text[index] !== "\x1b") {
+      if (text.codePointAt(index) !== 0x1b) {
         let escOffset = text.indexOf("\x1b", index);
         if (escOffset === -1) escOffset = text.length;
 
-        spans.push({
-          offset: this.inputOffset + textOffset - this.unparsedText.length,
-          length: escOffset - textOffset,
-          ...this.style,
-        });
+        spans.push({ ...style, offset: textOffset, length: escOffset - textOffset });
 
         textOffset = escOffset;
         index = escOffset;
@@ -124,49 +196,31 @@ export class Parser {
         continue;
       }
 
+      spans.push({
+        ...style,
+        offset: index,
+        length: mOffset - index + 1,
+        attributeFlags: style.attributeFlags | AttributeFlags.EscapeSequence,
+      });
+
       const args = argString
         .split(";")
         .filter((arg) => arg !== "")
         .map((arg) => parseInt(arg, 10));
       if (args.length === 0) args.push(0);
 
-      this.applyCodes(args, this.style);
+      this._applyCodes(args, style);
 
-      textOffset = index = mOffset + 1;
+      textOffset = mOffset + 1;
+      index = mOffset + 1;
     }
 
-    if (eof) {
-      spans.push({
-        offset: this.inputOffset + chunk.length - this.unparsedText.length,
-        length: this.unparsedText.length,
-        ...this.style,
-      });
-
-      this.unparsedText = "";
-      this.inputOffset += text.length;
-    } else {
-      this.unparsedText = text.slice(index);
-      this.inputOffset += index;
-    }
+    spans.push({ ...style, offset: textOffset, length: index - textOffset });
 
     return spans;
   }
 
-  public eof(): Span[] {
-    if (this.unparsedText.length === 0) return [];
-
-    this.inputOffset += this.unparsedText.length;
-
-    return [
-      {
-        offset: 0 - this.unparsedText.length,
-        length: this.unparsedText.length,
-        ...this.style,
-      },
-    ];
-  }
-
-  private applyCodes(args: number[], style: Style): void {
+  private _applyCodes(args: number[], style: Style): void {
     for (let argIndex = 0; argIndex < args.length; argIndex += 1) {
       const code = args[argIndex];
 
@@ -300,7 +354,7 @@ export class Parser {
             argIndex += 2;
 
             if (0 <= color && color <= 255) {
-              style.foregroundColor = this.convert8BitColor(color);
+              style.foregroundColor = this._convert8BitColor(color);
             }
           }
 
@@ -341,7 +395,7 @@ export class Parser {
             argIndex += 2;
 
             if (0 <= color && color <= 255) {
-              style.backgroundColor = this.convert8BitColor(color);
+              style.backgroundColor = this._convert8BitColor(color);
             }
           }
 
@@ -433,7 +487,7 @@ export class Parser {
     }
   }
 
-  private convert8BitColor(color: number): Color {
+  private _convert8BitColor(color: number): Color {
     if (0 <= color && color <= 7) {
       return ColorFlags.Named | color;
     }

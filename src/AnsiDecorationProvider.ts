@@ -67,8 +67,6 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
   private _provideDecorationsForAnsiLanguageType(
     document: TextDocument
   ): ProviderResult<[string, DecorationOptions[]][]> {
-    const documentText = document.getText();
-
     const result = new Map<string, DecorationOptions[]>();
     for (const key of this._decorationTypes.keys()) {
       result.set(key, []);
@@ -77,31 +75,25 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     const escapeDecorations: DecorationOptions[] = [];
     result.set("escape", escapeDecorations);
 
-    let lastSpanOffset = 0;
-    let lastSpanLength = 0;
+    const parser = new ansi.Parser();
 
-    for (const span of new ansi.Parser().chunk(documentText, true)) {
-      const { offset, length, ...style } = span;
+    for (let lineNumber = 0; lineNumber < document.lineCount; lineNumber += 1) {
+      const line = document.lineAt(lineNumber);
+      const spans = parser.appendLine(line.text);
 
-      const escapeRange = new Range(document.positionAt(lastSpanOffset + lastSpanLength), document.positionAt(offset));
+      for (const span of spans) {
+        const { offset, length, ...style } = span;
+        const range = new Range(lineNumber, offset, lineNumber, offset + length);
 
-      escapeDecorations.push({ range: escapeRange });
+        if (style.attributeFlags & ansi.AttributeFlags.EscapeSequence) {
+          escapeDecorations.push({ range });
+          continue;
+        }
 
-      const key = JSON.stringify(style);
-      const range = new Range(document.positionAt(offset), document.positionAt(offset + length));
-
-      upsert(result, key, []).push({ range });
-
-      lastSpanOffset = offset;
-      lastSpanLength = length;
+        const key = JSON.stringify(style);
+        upsert(result, key, []).push({ range });
+      }
     }
-
-    const escapeRange = new Range(
-      document.positionAt(lastSpanOffset + lastSpanLength),
-      document.positionAt(documentText.length)
-    );
-
-    escapeDecorations.push({ range: escapeRange });
 
     return [...result];
   }
@@ -112,28 +104,38 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     const actualUri = PrettyAnsiContentProvider.toActualUri(providerDocument.uri);
     const actualDocument = await workspace.openTextDocument(actualUri);
 
-    const actualDocumentText = actualDocument.getText();
-
-    let providerOffset = 0;
-
     const result = new Map<string, DecorationOptions[]>();
     for (const key of this._decorationTypes.keys()) {
       result.set(key, []);
     }
 
-    for (const span of new ansi.Parser().chunk(actualDocumentText, true)) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { offset, length, ...style } = span;
+    const parser = new ansi.Parser();
 
-      const key = JSON.stringify(style);
-      const range = new Range(
-        providerDocument.positionAt(providerOffset),
-        providerDocument.positionAt(providerOffset + length)
-      );
+    for (let lineNumber = 0; lineNumber < actualDocument.lineCount; lineNumber += 1) {
+      let totalEscapeLength = 0;
 
-      upsert(result, key, []).push({ range });
+      const line = actualDocument.lineAt(lineNumber);
+      const spans = parser.appendLine(line.text);
 
-      providerOffset += length;
+      for (const span of spans) {
+        const { offset, length, ...style } = span;
+
+        if (style.attributeFlags & ansi.AttributeFlags.EscapeSequence) {
+          totalEscapeLength += length;
+          continue;
+        }
+
+        const range = new Range(
+          lineNumber,
+          offset - totalEscapeLength,
+          lineNumber,
+          offset + length - totalEscapeLength
+        );
+
+        const key = JSON.stringify(style);
+
+        upsert(result, key, []).push({ range });
+      }
     }
 
     return [...result];
