@@ -17,9 +17,9 @@ function upsert<K, V>(map: Map<K, V>, key: K, value: V): V {
   return map.get(key) ?? (map.set(key, value), value);
 }
 
-const ansiThemeColors: Record<ansi.NamedColor, ThemeColor> = {
-  [ansi.NamedColor.DefaultBackground]: new ThemeColor("editor.background"),
-  [ansi.NamedColor.DefaultForeground]: new ThemeColor("editor.foreground"),
+const ansiThemeColors: Record<ansi.NamedColor, ThemeColor | undefined> = {
+  [ansi.NamedColor.DefaultBackground]: undefined,
+  [ansi.NamedColor.DefaultForeground]: undefined,
 
   [ansi.NamedColor.Black]: new ThemeColor("terminal.ansiBlack"),
   [ansi.NamedColor.BrightBlack]: new ThemeColor("terminal.ansiBrightBlack"),
@@ -46,7 +46,7 @@ const ansiThemeColors: Record<ansi.NamedColor, ThemeColor> = {
   [ansi.NamedColor.BrightCyan]: new ThemeColor("terminal.ansiBrightCyan"),
 };
 
-function convertColor(color: ansi.Color): ThemeColor | string {
+function convertColor(color: ansi.Color): ThemeColor | string | undefined {
   if (color & ansi.ColorFlags.Named) return ansiThemeColors[color];
   return "#" + color.toString(16).padStart(6, "0");
 }
