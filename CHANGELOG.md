@@ -1,3 +1,8 @@
+## 1.1.2
+
+- Fixed a bug with overriding editor backgrounds (e.g. current line highlighting not working)
+- Improved the ANSI parser to allow for future refactoring
+
 ## 1.1.1
 
 - Fixed a bug with corrupting previews of files that have been deleted and re-created
