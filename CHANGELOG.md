@@ -1,3 +1,7 @@
+## 1.1.3
+
+- Fixed a bug with adjacent SGI and non-SGI escapes
+
 ## 1.1.2
 
 - Fixed a bug with overriding editor backgrounds (e.g. current line highlighting not working)

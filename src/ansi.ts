@@ -31,6 +31,8 @@ export enum NamedColor {
 export type RgbColor = number;
 
 export enum AttributeFlags {
+  None = 0,
+
   Bold = 1 << 0,
   Faint = 1 << 1,
   Italic = 1 << 2,
@@ -191,8 +193,23 @@ export class Parser {
       }
 
       const argString = text.substring(index + 2, mOffset);
+
       if (!/^[0-9;]*$/.test(argString)) {
-        index = mOffset;
+        const firstLetterOffset = argString.search(/[a-zA-Z]/);
+
+        if (firstLetterOffset < 0) {
+          index += 1;
+          continue;
+        }
+
+        spans.push({
+          ...style,
+          offset: index,
+          length: 2 + firstLetterOffset + 1,
+          attributeFlags: style.attributeFlags | AttributeFlags.EscapeSequence,
+        });
+
+        index += 2 + firstLetterOffset + 1;
         continue;
       }
 

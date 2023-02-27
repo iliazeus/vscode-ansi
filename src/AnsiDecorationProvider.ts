@@ -47,7 +47,7 @@ const ansiThemeColors: Record<ansi.NamedColor, ThemeColor | undefined> = {
 };
 
 function convertColor(color: ansi.Color): ThemeColor | string | undefined {
-  if (color & ansi.ColorFlags.Named) return ansiThemeColors[color];
+  if (color & ansi.ColorFlags.Named) return ansiThemeColors[color as ansi.NamedColor];
   return "#" + color.toString(16).padStart(6, "0");
 }
 
