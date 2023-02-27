@@ -1,3 +1,7 @@
+## 1.1.4
+
+- Cleaned up extension activation events
+
 ## 1.1.3
 
 - Fixed a bug with adjacent SGI and non-SGI escapes
