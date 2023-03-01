@@ -186,50 +186,34 @@ export class Parser {
         continue;
       }
 
-      const mOffset = text.indexOf("m", index + 2);
-      if (mOffset === -1) {
+      const match = text.slice(index + 2).match(/^([0-9;]*)([a-zA-Z])/);
+      if (!match) {
         index += 1;
         continue;
       }
 
-      const argString = text.substring(index + 2, mOffset);
-
-      if (!/^[0-9;]*$/.test(argString)) {
-        const firstLetterOffset = argString.search(/[a-zA-Z]/);
-
-        if (firstLetterOffset < 0) {
-          index += 1;
-          continue;
-        }
-
-        spans.push({
-          ...style,
-          offset: index,
-          length: 2 + firstLetterOffset + 1,
-          attributeFlags: style.attributeFlags | AttributeFlags.EscapeSequence,
-        });
-
-        index += 2 + firstLetterOffset + 1;
-        continue;
-      }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const argString = match[1]!, commandLetter = match[2]!;
 
       spans.push({
         ...style,
         offset: index,
-        length: mOffset - index + 1,
+        length: 2 + argString.length + 1,
         attributeFlags: style.attributeFlags | AttributeFlags.EscapeSequence,
       });
 
-      const args = argString
-        .split(";")
-        .filter((arg) => arg !== "")
-        .map((arg) => parseInt(arg, 10));
-      if (args.length === 0) args.push(0);
+      if (commandLetter === "m") {
+        const args = argString
+          .split(";")
+          .filter((arg) => arg !== "")
+          .map((arg) => parseInt(arg, 10));
+        if (args.length === 0) args.push(0);
 
-      this._applyCodes(args, style);
+        this._applyCodes(args, style);
+      }
 
-      textOffset = mOffset + 1;
-      index = mOffset + 1;
+      textOffset = index + 2 + argString.length + 1;
+      index = textOffset;
     }
 
     spans.push({ ...style, offset: textOffset, length: index - textOffset });
