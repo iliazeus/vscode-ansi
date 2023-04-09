@@ -1,13 +1,4 @@
-import {
-  TextDocument,
-  ProviderResult,
-  DecorationOptions,
-  TextEditorDecorationType,
-  window,
-  Range,
-  workspace,
-  ThemeColor,
-} from "vscode";
+import { TextDocument, ProviderResult, TextEditorDecorationType, window, Range, workspace, ThemeColor } from "vscode";
 
 import * as ansi from "./ansi";
 import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
@@ -52,7 +43,7 @@ function convertColor(color: ansi.Color): ThemeColor | string | undefined {
 }
 
 export class AnsiDecorationProvider implements TextEditorDecorationProvider {
-  provideDecorations(document: TextDocument): ProviderResult<[string, DecorationOptions[]][]> {
+  provideDecorationRanges(document: TextDocument): ProviderResult<[string, Range[]][]> {
     if (document.uri.scheme === PrettyAnsiContentProvider.scheme) {
       return this._provideDecorationsForPrettifiedAnsi(document);
     }
@@ -64,15 +55,13 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
     return undefined;
   }
 
-  private _provideDecorationsForAnsiLanguageType(
-    document: TextDocument
-  ): ProviderResult<[string, DecorationOptions[]][]> {
-    const result = new Map<string, DecorationOptions[]>();
+  private _provideDecorationsForAnsiLanguageType(document: TextDocument): ProviderResult<[string, Range[]][]> {
+    const result = new Map<string, Range[]>();
     for (const key of this._decorationTypes.keys()) {
       result.set(key, []);
     }
 
-    const escapeDecorations: DecorationOptions[] = [];
+    const escapeDecorations: Range[] = [];
     result.set("escape", escapeDecorations);
 
     const parser = new ansi.Parser();
@@ -86,25 +75,23 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
         const range = new Range(lineNumber, offset, lineNumber, offset + length);
 
         if (style.attributeFlags & ansi.AttributeFlags.EscapeSequence) {
-          escapeDecorations.push({ range });
+          escapeDecorations.push(range);
           continue;
         }
 
         const key = JSON.stringify(style);
-        upsert(result, key, []).push({ range });
+        upsert(result, key, []).push(range);
       }
     }
 
     return [...result];
   }
 
-  private async _provideDecorationsForPrettifiedAnsi(
-    providerDocument: TextDocument
-  ): Promise<[string, DecorationOptions[]][]> {
+  private async _provideDecorationsForPrettifiedAnsi(providerDocument: TextDocument): Promise<[string, Range[]][]> {
     const actualUri = PrettyAnsiContentProvider.toActualUri(providerDocument.uri);
     const actualDocument = await workspace.openTextDocument(actualUri);
 
-    const result = new Map<string, DecorationOptions[]>();
+    const result = new Map<string, Range[]>();
     for (const key of this._decorationTypes.keys()) {
       result.set(key, []);
     }
@@ -134,7 +121,7 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
 
         const key = JSON.stringify(style);
 
-        upsert(result, key, []).push({ range });
+        upsert(result, key, []).push(range);
       }
     }
 

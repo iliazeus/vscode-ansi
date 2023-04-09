@@ -1,14 +1,7 @@
-import {
-  TextDocument,
-  CancellationToken,
-  ProviderResult,
-  DecorationOptions,
-  TextEditorDecorationType,
-  TextEditor,
-} from "vscode";
+import { TextDocument, CancellationToken, ProviderResult, TextEditorDecorationType, TextEditor, Range } from "vscode";
 
 export interface TextEditorDecorationProvider {
-  provideDecorations(document: TextDocument, token: CancellationToken): ProviderResult<[string, DecorationOptions[]][]>;
+  provideDecorationRanges(document: TextDocument, token: CancellationToken): ProviderResult<[string, Range[]][]>;
   resolveDecoration(key: string, token: CancellationToken): ProviderResult<TextEditorDecorationType>;
 }
 
@@ -24,10 +17,10 @@ export async function executeRegisteredTextEditorDecorationProviders(
   token: CancellationToken
 ): Promise<void> {
   for (const provider of registeredProviders) {
-    let decorations;
+    let decorations: [string, Range[]][] | null | undefined;
 
     try {
-      decorations = await provider.provideDecorations(editor.document, token);
+      decorations = await provider.provideDecorationRanges(editor.document, token);
     } catch (error) {
       console.error(`error providing decorations`, error);
       return;
@@ -43,7 +36,7 @@ export async function executeRegisteredTextEditorDecorationProviders(
 
     const decorationTypes = new Map<string, TextEditorDecorationType>();
 
-    for (const [key, options] of decorations) {
+    for (const [key, ranges] of decorations) {
       let decorationType: ProviderResult<TextEditorDecorationType> = decorationTypes.get(key);
 
       if (!decorationType) {
@@ -66,7 +59,7 @@ export async function executeRegisteredTextEditorDecorationProviders(
         decorationTypes.set(key, decorationType);
       }
 
-      editor.setDecorations(decorationType, options);
+      editor.setDecorations(decorationType, ranges);
     }
   }
 }
