@@ -1,3 +1,7 @@
+## 1.1.6
+
+- Optimize memory usage
+
 ## 1.1.5
 
 - Strip all ANSI escapes in preview mode, not just SGR ones
