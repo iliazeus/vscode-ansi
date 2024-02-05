@@ -3,7 +3,7 @@
   "publisher": "iliazeus",
   "displayName": "ANSI Colors",
   "description": "ANSI color styling for text documents",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "license": "MIT",
   "repository": {
     "url": "https://github.com/iliazeus/vscode-ansi"
@@ -76,7 +76,8 @@
         "extensions": [
           ".ans",
           ".ansi"
-        ]
+        ],
+        "configuration": "./ansi.language-configuration.json"
       }
     ]
   },
