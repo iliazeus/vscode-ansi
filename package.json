@@ -71,7 +71,7 @@
       {
         "id": "ansi",
         "aliases": [
-          "ANSI text"
+          "ANSI Text"
         ],
         "extensions": [
           ".ans",
