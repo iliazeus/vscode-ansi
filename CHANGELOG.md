@@ -1,3 +1,8 @@
+## 1.1.7
+
+- Fix extension not being activated in certain cases
+- Fix capitalization of "ANSI Text"
+
 ## 1.1.6
 
 - Optimize memory usage
