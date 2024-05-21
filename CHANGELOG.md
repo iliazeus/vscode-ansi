@@ -1,3 +1,8 @@
+## 1.1.8
+
+- Added support for automatically opening the ANSI Text preview when opening an ANSI file. This is now enabled by default
+- Added configuration options in extension settings allowing the user to control that behavior via autoPreview and autoPreviewToSide
+
 ## 1.1.7
 
 - Fix extension not being activated in certain cases
