@@ -83,7 +83,7 @@
       }
     ],
     "configuration": {
-      "title": "ANSI Text",
+      "title": "ANSI Colors",
       "properties": {
         "iliazeus.vscode-ansi.autoPreview": {
           "type": "boolean",
