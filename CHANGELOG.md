@@ -1,3 +1,7 @@
+## 1.1.8
+
+- Add inverse support (^[7)
+
 ## 1.1.7
 
 - Fix extension not being activated in certain cases

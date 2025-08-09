@@ -141,9 +141,13 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
 
     const style: ansi.Style = JSON.parse(key);
 
+    const inverse = style.attributeFlags & ansi.AttributeFlags.Inverse;
+    const background = inverse ? style.foregroundColor : style.backgroundColor;
+    const foreground = inverse ? style.backgroundColor : style.foregroundColor;
+
     decorationType = window.createTextEditorDecorationType({
-      backgroundColor: convertColor(style.backgroundColor),
-      color: convertColor(style.foregroundColor),
+      backgroundColor: convertColor(background),
+      color: convertColor(foreground),
 
       fontWeight: style.attributeFlags & ansi.AttributeFlags.Bold ? "bold" : undefined,
       fontStyle: style.attributeFlags & ansi.AttributeFlags.Italic ? "italic" : undefined,
