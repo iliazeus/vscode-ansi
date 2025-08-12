@@ -37,8 +37,17 @@ const ansiThemeColors: Record<ansi.NamedColor, ThemeColor | undefined> = {
   [ansi.NamedColor.BrightCyan]: new ThemeColor("terminal.ansiBrightCyan"),
 };
 
-function convertColor(color: ansi.Color): ThemeColor | string | undefined {
-  if (color & ansi.ColorFlags.Named) return ansiThemeColors[color as ansi.NamedColor];
+const ansiExplicitThemeColors: Record<ansi.NamedColor, ThemeColor | undefined> = {
+  ...ansiThemeColors,
+  [ansi.NamedColor.DefaultBackground]: new ThemeColor("editor.background"),
+  [ansi.NamedColor.DefaultForeground]: new ThemeColor("editor.foreground"),
+};
+
+function convertColor(color: ansi.Color, explicitDefaults: boolean): ThemeColor | string | undefined {
+  if (color & ansi.ColorFlags.Named) {
+    const record = explicitDefaults ? ansiExplicitThemeColors : ansiThemeColors;
+    return record[color as ansi.NamedColor];
+  }
   return "#" + color.toString(16).padStart(6, "0");
 }
 
@@ -141,13 +150,13 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
 
     const style: ansi.Style = JSON.parse(key);
 
-    const inverse = style.attributeFlags & ansi.AttributeFlags.Inverse;
+    const inverse = (style.attributeFlags & ansi.AttributeFlags.Inverse) !== 0;
     const background = inverse ? style.foregroundColor : style.backgroundColor;
     const foreground = inverse ? style.backgroundColor : style.foregroundColor;
 
     decorationType = window.createTextEditorDecorationType({
-      backgroundColor: convertColor(background),
-      color: convertColor(foreground),
+      backgroundColor: convertColor(background, inverse),
+      color: convertColor(foreground, inverse),
 
       fontWeight: style.attributeFlags & ansi.AttributeFlags.Bold ? "bold" : undefined,
       fontStyle: style.attributeFlags & ansi.AttributeFlags.Italic ? "italic" : undefined,
