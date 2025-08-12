@@ -5,6 +5,7 @@ import {
   commands,
   window,
   ViewColumn,
+  TextEditor,
   TextDocumentShowOptions,
 } from "vscode";
 
@@ -29,23 +30,25 @@ export async function activate(context: ExtensionContext): Promise<void> {
     workspace.registerTextDocumentContentProvider(PrettyAnsiContentProvider.scheme, prettyAnsiContentProvider)
   );
 
-  const showPretty = async (options?: TextDocumentShowOptions) => {
-    const actualUri = window.activeTextEditor?.document.uri;
+  const showPretty = async (forcePreview: boolean = false, options: TextDocumentShowOptions = { viewColumn: ViewColumn.Active}) => {
+    if (forcePreview || workspace.getConfiguration(`${extensionId}`).autoPreview) {
+      const editor = window.activeTextEditor
+      if (editor && editor.document && editor.document.languageId === 'ansi' && editor.document.uri.scheme === 'file') {
+        const providerUri = PrettyAnsiContentProvider.toProviderUri(editor.document.uri);
 
-    if (!actualUri) {
-      return;
+        const autoPreviewToSide = workspace.getConfiguration(`${extensionId}`).autoPreviewToSide;
+        let viewColumnOptions = (!forcePreview && autoPreviewToSide) ? { viewColumn: ViewColumn.Beside } : options;
+
+        await window.showTextDocument(providerUri, viewColumnOptions);
+      }
     }
-
-    const providerUri = PrettyAnsiContentProvider.toProviderUri(actualUri);
-
-    await window.showTextDocument(providerUri, options);
   };
 
   context.subscriptions.push(
-    commands.registerCommand(`${extensionId}.showPretty`, () => showPretty({ viewColumn: ViewColumn.Active }))
+    commands.registerCommand(`${extensionId}.showPretty`, () => showPretty(true))
   );
   context.subscriptions.push(
-    commands.registerCommand(`${extensionId}.showPrettyToSide`, () => showPretty({ viewColumn: ViewColumn.Beside }))
+    commands.registerCommand(`${extensionId}.showPrettyToSide`, () => showPretty(true, { viewColumn: ViewColumn.Beside }))
   );
 
   const ansiDecorationProvider = new AnsiDecorationProvider();
@@ -67,6 +70,12 @@ export async function activate(context: ExtensionContext): Promise<void> {
       edit.insert(editor.selection.end, "\x1b");
     })
   );
+
+  window.onDidChangeActiveTextEditor((textEditor: TextEditor | undefined) => {
+    showPretty();
+  });
+
+  showPretty();
 }
 
 export function deactivate(): void {

@@ -3,7 +3,7 @@
   "publisher": "iliazeus",
   "displayName": "ANSI Colors",
   "description": "ANSI color styling for text documents",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "license": "MIT",
   "repository": {
     "url": "https://github.com/iliazeus/vscode-ansi"
@@ -26,7 +26,9 @@
     "colors",
     "logs"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -79,7 +81,22 @@
         ],
         "configuration": "./ansi.language-configuration.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "ANSI Colors",
+      "properties": {
+        "iliazeus.vscode-ansi.autoPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open the ANSI Text preview without having to use the keyboard shortcut to open it."
+        },
+        "iliazeus.vscode-ansi.autoPreviewToSide": {
+          "type": "boolean",
+          "default": false,
+          "description": "If Auto Preview is set to True: Automatically open the ANSI Text Preview to the side. Warning: This can cause undesirable behavior!"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
@@ -105,5 +122,7 @@
     "typescript": "^4.9.5",
     "vscode-test": "^1.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "yarn": "^1.22.22"
+  }
 }
