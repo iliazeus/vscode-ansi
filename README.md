@@ -26,6 +26,18 @@ The extension fetches the colors from the current theme and aims to look as good
 
 ![ANSI Text preview; various themes](images/screenshot-themes.gif)
 
+## FAQ
+
+- How do I enable this extension for files other than `.ans` and `.ansi`?
+
+  This can be done using the VS Code "language mode" feature. For example, to enable it for all `.log` filesd, open a `.log` file, then do `F1 - Change Language Mode - Configure File Association for '.log' - ANSI Text`.
+
+- Can the "preview mode" be opened automatically?
+
+  No, it can't, not with the way the extension is currently designed, at least.
+
+  `vscode-ansi` uses VSCode's built-in text editors in readonly mode (via [`TextDocumentContentProvider`](https://code.visualstudio.com/api/references/vscode-api#TextDocumentContentProvider)) for preview display. The only custom editors allowed to open files "by default" (e.g. by double-click) are [webview-based custom editors](https://code.visualstudio.com/api/extension-guides/custom-editors). But building such an editor means reimplementing all the default functionality from scratch - navigation, searching, line wrap, interaction with other extensions (e.g. spell check).
+
 ## Supported ANSI escape codes
 
 Basic colors and formatting:
@@ -39,22 +51,3 @@ Basic colors and formatting:
 24-bit colors:
 
 ![24-bit colors](images/screenshot-24bitColor-darkPlus.png)
-
-## Custom file icon
-
-You can add an icon to the ANSI text files by using the [`vscode-icons`] extension:
-
-```javascript
-{
-  // add this to your settings file
-  "vsicons.associations.files": [
-    {
-      "icon": "text", // or any other icon from vscode-icons
-      "extensions": ["ans", "ansi"],
-      "format": "svg"
-    }
-  ]
-}
-```
-
-[`vscode-icons`]: https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons
