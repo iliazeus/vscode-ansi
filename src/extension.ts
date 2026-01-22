@@ -36,7 +36,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
       if (editor && editor.document && editor.document.languageId === 'ansi' && editor.document.uri.scheme === 'file') {
         const providerUri = PrettyAnsiContentProvider.toProviderUri(editor.document.uri);
 
-        const autoPreviewToSide = workspace.getConfiguration(`${extensionId}`).autoPreviewToSide;
+        const autoPreviewToSide = workspace.getConfiguration(extensionId).autoPreviewToSide;
         let viewColumnOptions = (!forcePreview && autoPreviewToSide) ? { viewColumn: ViewColumn.Beside } : options;
 
         await window.showTextDocument(providerUri, viewColumnOptions);
