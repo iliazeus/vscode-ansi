@@ -8,6 +8,8 @@
 
 ANSI Color styling for your text editor.
 
+> Forked from [iliazeus/vscode-ansi](https://github.com/iliazeus/vscode-ansi) and enhanced with more complete ANSI escape code and additional function support.
+
 ## Basic usage
 
 Select the `ANSI Text` language mode to highlight text marked up with ANSI escapes. Files with the `.ans` and `.ansi` extensions will be highlighted by default.
