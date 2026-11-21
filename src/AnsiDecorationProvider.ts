@@ -1,4 +1,4 @@
-import { TextDocument, ProviderResult, TextEditorDecorationType, window, Range, workspace, ThemeColor } from "vscode";
+import { TextDocument, ProviderResult, TextEditorDecorationType, window, Range, workspace, ThemeColor, DecorationRangeBehavior } from "vscode";
 
 import * as ansi from "./ansi";
 import { PrettyAnsiContentProvider } from "./PrettyAnsiContentProvider";
@@ -6,6 +6,30 @@ import { TextEditorDecorationProvider } from "./TextEditorDecorationProvider";
 
 function upsert<K, V>(map: Map<K, V>, key: K, value: V): V {
   return map.get(key) ?? (map.set(key, value), value);
+}
+
+export type EscapeSequenceDisplayMode = "show" | "dim" | "hide";
+
+function readEscapeSequenceDisplayMode(): EscapeSequenceDisplayMode {
+  const value = workspace.getConfiguration("ansiColors").get<string>("escapeSequenceDisplay", "dim");
+  return value === "show" || value === "hide" ? value : "dim";
+}
+
+function createEscapeDecorationType(mode: EscapeSequenceDisplayMode): TextEditorDecorationType {
+  switch (mode) {
+    case "hide":
+      return window.createTextEditorDecorationType({
+        textDecoration: "none; font-size: 0; letter-spacing: 0",
+        opacity: "0",
+        rangeBehavior: DecorationRangeBehavior.ClosedClosed,
+      });
+
+    case "show":
+      return window.createTextEditorDecorationType({});
+
+    default:
+      return window.createTextEditorDecorationType({ opacity: "50%" });
+  }
 }
 
 const ansiThemeColors: Record<ansi.NamedColor, ThemeColor | undefined> = {
@@ -138,8 +162,16 @@ export class AnsiDecorationProvider implements TextEditorDecorationProvider {
   }
 
   private _decorationTypes = new Map<string, TextEditorDecorationType>([
-    ["escape", window.createTextEditorDecorationType({ opacity: "50%" })],
+    ["escape", createEscapeDecorationType(readEscapeSequenceDisplayMode())],
   ]);
+
+  refreshEscapeDecorationType(): void {
+    const previousType = this._decorationTypes.get("escape");
+
+    this._decorationTypes.set("escape", createEscapeDecorationType(readEscapeSequenceDisplayMode()));
+
+    previousType?.dispose();
+  }
 
   resolveDecoration(key: string): ProviderResult<TextEditorDecorationType> {
     let decorationType = this._decorationTypes.get(key);

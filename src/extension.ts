@@ -62,6 +62,20 @@ export async function activate(context: ExtensionContext): Promise<void> {
   );
 
   context.subscriptions.push(
+    workspace.onDidChangeConfiguration((event) => {
+      if (!event.affectsConfiguration("ansiColors.escapeSequenceDisplay")) {
+        return;
+      }
+
+      ansiDecorationProvider.refreshEscapeDecorationType();
+
+      for (const editor of window.visibleTextEditors) {
+        editorRedrawWatcher.forceEmitForUri(editor.document.uri);
+      }
+    })
+  );
+
+  context.subscriptions.push(
     commands.registerTextEditorCommand(`${extensionId}.insertEscapeCharacter`, (editor, edit) => {
       edit.delete(editor.selection);
       edit.insert(editor.selection.end, "\x1b");
