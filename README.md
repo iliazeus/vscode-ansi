@@ -26,6 +26,16 @@ The extension fetches the colors from the current theme and aims to look as good
 
 ![ANSI Text preview; various themes](images/screenshot-themes.gif)
 
+## Configuration
+
+- `ansiColors.escapeSequenceDisplay` — controls how escape sequences are displayed in the editor:
+
+  - `"show"` — show escape sequences as regular text;
+  - `"dim"` — dim escape sequences, 50% opacity (default);
+  - `"hide"` — hide escape sequences completely, making them zero-width.
+
+  The `"hide"` mode is convenient for reading logs with heavy ANSI markup, while keeping the underlying document — and thus search, copy, and line numbers — intact.
+
 ## FAQ
 
 - How do I enable this extension for files other than `.ans` and `.ansi`?

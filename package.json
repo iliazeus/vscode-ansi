@@ -79,7 +79,27 @@
         ],
         "configuration": "./ansi.language-configuration.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "ANSI Colors",
+      "properties": {
+        "ansiColors.escapeSequenceDisplay": {
+          "type": "string",
+          "default": "dim",
+          "enum": [
+            "show",
+            "dim",
+            "hide"
+          ],
+          "enumDescriptions": [
+            "Show escape sequences as regular text.",
+            "Dim escape sequences (50% opacity).",
+            "Hide escape sequences completely (zero width)."
+          ],
+          "description": "Controls how ANSI escape sequences are displayed in the editor."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",

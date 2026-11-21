@@ -1,3 +1,7 @@
+## Unreleased
+
+- Add the `ansiColors.escapeSequenceDisplay` setting (`"show"`, `"dim"`, `"hide"`) controlling how escape sequences are displayed in the editor
+
 ## 1.1.8
 
 - Add inverse support (^[7)
